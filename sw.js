@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sticker-voting-v1';
+const CACHE_NAME = 'sticker-voting-v2';
 const ASSETS = [
   './',
   './index.html',
