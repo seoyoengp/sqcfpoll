@@ -539,21 +539,19 @@ function updateSyncQR() {
   }
 }
 
-// Cloud persistence API: extendsclass.com implementation
+// Cloud persistence API: kvdb.io implementation
 async function saveStateToCloud() {
   setCloudStatusVisual('syncing', '클라우드 저장 중...');
   try {
-    let url = 'https://extendsclass.com/api/json-storage/bin';
-    let method = 'POST';
-    
-    // If a document ID is already present, write to it
-    if (binId) {
-      url = `https://extendsclass.com/api/json-storage/bin/${binId}`;
-      method = 'PUT';
+    // Generate a unique session key if it doesn't exist
+    if (!binId) {
+      binId = 'votes_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 9);
     }
+    
+    const url = `https://kvdb.io/U7TVWuq6rqahwiexRAZGaf/${binId}`;
 
     const response = await fetch(url, {
-      method: method,
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
       },
@@ -561,14 +559,10 @@ async function saveStateToCloud() {
     });
 
     if (!response.ok) throw new Error("Server error " + response.status);
-    const result = await response.json();
-
-    // If new document was created, save its ID and update browser URL
-    if (!binId && result.id) {
-      binId = result.id;
-      const newUrl = `${window.location.origin}${window.location.pathname}?id=${binId}`;
-      window.history.replaceState({ path: newUrl }, '', newUrl);
-    }
+    
+    // Update browser URL query parameter ?id=YOUR_BIN_ID without reload
+    const newUrl = `${window.location.origin}${window.location.pathname}?id=${binId}`;
+    window.history.replaceState({ path: newUrl }, '', newUrl);
 
     saveStateToStorage();
     updateSyncQR();
@@ -585,7 +579,7 @@ async function saveStateToCloud() {
 async function fetchStateFromCloud(id) {
   setCloudStatusVisual('syncing', '클라우드 연동 중...');
   try {
-    const response = await fetch(`https://extendsclass.com/api/json-storage/bin/${id}`);
+    const response = await fetch(`https://kvdb.io/U7TVWuq6rqahwiexRAZGaf/${id}`);
     if (!response.ok) throw new Error("Document not found");
     const fetchedData = await response.json();
 
