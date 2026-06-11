@@ -1,0 +1,18 @@
+{
+  "name": "실시간 오프라인 스티커 투표 보드",
+  "short_name": "스티커 투표",
+  "description": "현장 행사 부스용 오프라인 4분할 스티커 투표 보드",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#070913",
+  "theme_color": "#070913",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

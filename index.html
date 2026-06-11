@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>스티커 투표 보드 | Sticker Voting Board</title>
+  
+  <!-- Styling -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Manifest & Favicon (for PWA) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="스티커 투표">
+  
+  <!-- FontAwesome Icons (Embedded/SVG for complete offline reliability, or fallback standard text glyphs) -->
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- PWA Install Banner -->
+    <div id="pwaBanner" class="pwa-banner">
+      <div class="pwa-info">
+        <div class="pwa-title">📲 홈 화면에 추가하기</div>
+        <div class="pwa-desc">인터넷 연결이 없어도 부스에서 오프라인으로 사용할 수 있습니다.</div>
+      </div>
+      <button id="pwaInstallBtn" class="btn btn-primary pwa-btn">설치</button>
+    </div>
+
+    <!-- App Header Banner -->
+    <header class="app-header">
+      <div class="app-title-container">
+        <h1 class="app-title" id="boardTitle">실시간 오프라인 스티커 투표</h1>
+        <div class="app-subtitle">원하는 후보 영역을 탭하여 스티커를 붙여주세요!</div>
+      </div>
+      <div class="header-controls">
+        <div id="cloudStatus" class="cloud-status-badge status-offline">
+          <span class="status-dot"></span>
+          <span id="cloudStatusText">로컬 저장됨</span>
+        </div>
+        <div class="total-votes-badge">
+          <span>총 투표수:</span>
+          <span class="total-votes-count" id="totalVotes">0</span>
+        </div>
+        <button class="settings-btn" id="openSettingsBtn" aria-label="설정">
+          <!-- Inline SVG for offline compatibility -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Quadrant Grid -->
+    <main class="grid-container" id="gridContainer">
+      
+      <!-- Quadrant 1 (Top Left) -->
+      <section class="quadrant" id="q1" data-index="0">
+        <div class="candidate-header">
+          <div class="candidate-num">Candidate A</div>
+          <div class="candidate-name" id="nameQ1">후보자 1</div>
+        </div>
+        <div class="candidate-footer">
+          <div></div> <!-- Spacer -->
+          <div class="vote-counter" id="countQ1">0</div>
+        </div>
+      </section>
+
+      <!-- Quadrant 2 (Top Right) -->
+      <section class="quadrant" id="q2" data-index="1">
+        <div class="candidate-header">
+          <div class="candidate-num">Candidate B</div>
+          <div class="candidate-name" id="nameQ2">후보자 2</div>
+        </div>
+        <div class="candidate-footer">
+          <div></div>
+          <div class="vote-counter" id="countQ2">0</div>
+        </div>
+      </section>
+
+      <!-- Quadrant 3 (Bottom Left) -->
+      <section class="quadrant" id="q3" data-index="2">
+        <div class="candidate-header">
+          <div class="candidate-num">Candidate C</div>
+          <div class="candidate-name" id="nameQ3">후보자 3</div>
+        </div>
+        <div class="candidate-footer">
+          <div></div>
+          <div class="vote-counter" id="countQ3">0</div>
+        </div>
+      </section>
+
+      <!-- Quadrant 4 (Bottom Right) -->
+      <section class="quadrant" id="q4" data-index="3">
+        <div class="candidate-header">
+          <div class="candidate-num">Candidate D</div>
+          <div class="candidate-name" id="nameQ4">후보자 4</div>
+        </div>
+        <div class="candidate-footer">
+          <div></div>
+          <div class="vote-counter" id="countQ4">0</div>
+        </div>
+      </section>
+
+    </main>
+    
+  </div>
+
+  <!-- Settings / Admin Panel Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-container">
+      
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          관리 설정 (Admin Panel)
+        </h2>
+        <button class="modal-close" id="closeSettingsBtn" aria-label="닫기">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Section 1: Candidate Configuration -->
+        <section class="settings-section">
+          <h3 class="settings-section-title">투표 후보군 관리</h3>
+          <div class="candidate-inputs-grid">
+            
+            <div class="candidate-input-group">
+              <label class="candidate-input-label label-q1" for="inputQ1">후보자 A (왼쪽 위)</label>
+              <input type="text" id="inputQ1" class="input-field" value="후보자 1">
+            </div>
+
+            <div class="candidate-input-group">
+              <label class="candidate-input-label label-q2" for="inputQ2">후보자 B (오른쪽 위)</label>
+              <input type="text" id="inputQ2" class="input-field" value="후보자 2">
+            </div>
+
+            <div class="candidate-input-group">
+              <label class="candidate-input-label label-q3" for="inputQ3">후보자 C (왼쪽 아래)</label>
+              <input type="text" id="inputQ3" class="input-field" value="후보자 3">
+            </div>
+
+            <div class="candidate-input-group">
+              <label class="candidate-input-label label-q4" for="inputQ4">후보자 D (오른쪽 아래)</label>
+              <input type="text" id="inputQ4" class="input-field" value="후보자 4">
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Section 2: Voting UX Options -->
+        <section class="settings-section">
+          <h3 class="settings-section-title">화면 및 투표 옵션</h3>
+          
+          <div class="toggle-control">
+            <div class="toggle-info">
+              <div class="toggle-title">실시간 투표수 표시</div>
+              <div class="toggle-desc">화면 하단에 실시간 득표수를 대중에게 노출할지 결정합니다.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggleShowCounts" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-control" style="margin-bottom: 20px;">
+            <div class="toggle-info">
+              <div class="toggle-title">스티커 부착 사운드</div>
+              <div class="toggle-desc">화면을 터치했을 때 만족감을 주는 팝 사운드를 활성화합니다. (오프라인 웹 합성음)</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggleSound" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div style="margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">부착할 스티커 스타일 선택</div>
+          <div class="sticker-style-options">
+            
+            <div class="sticker-style-card active" data-style="dot">
+              <div class="sticker-style-preview preview-dot"></div>
+              <div class="sticker-style-name">원형 스티커</div>
+            </div>
+
+            <div class="sticker-style-card" data-style="star">
+              <div class="sticker-style-preview preview-star">⭐</div>
+              <div class="sticker-style-name">별 스티커</div>
+            </div>
+
+            <div class="sticker-style-card" data-style="heart">
+              <div class="sticker-style-preview preview-star" style="background:#e11d48; border: 2px solid rgba(255,255,255,0.2);">❤️</div>
+              <div class="sticker-style-name">하트 스티커</div>
+            </div>
+
+            <div class="sticker-style-card" data-style="badge">
+              <div class="sticker-style-preview preview-badge">🏆</div>
+              <div class="sticker-style-name">메탈 배지</div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Section 3: Backup & Sync -->
+        <section class="settings-section" style="margin-bottom: 0;">
+          <h3 class="settings-section-title">기기 간 동기화 및 백업 (배터리 방전 대비)</h3>
+          
+          <div class="sync-section-container">
+            
+            <!-- File-based Backup actions -->
+            <div class="backup-actions-card">
+              <button class="btn btn-primary" id="cloudSaveBtn" style="background:#10b981; border-color:#059669;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+                현재 투표 현황 클라우드 저장
+              </button>
+
+              <button class="btn btn-secondary" id="resetLimitBtn" style="border-color:#a855f7; color:#c084fc;">
+                이 기기의 개인 투표 제한 초기화
+              </button>
+
+              <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin-top: 10px; margin-bottom: 6px;">
+                오프라인 파일로 백업할 수도 있습니다:
+              </div>
+              
+              <div style="display:flex; gap: 8px;">
+                <button class="btn btn-secondary" id="exportBackupBtn" style="flex:1; padding: 8px 10px; font-size: 0.8rem;">
+                  파일 저장
+                </button>
+                
+                <div class="file-upload-wrapper" style="flex:1;">
+                  <button class="btn btn-secondary" style="width:100%; padding: 8px 10px; font-size: 0.8rem;">
+                    파일 복구
+                  </button>
+                  <input type="file" id="importFileInput" class="file-upload-input" accept=".json">
+                </div>
+              </div>
+
+              <button class="btn btn-danger" id="resetVotesBtn" style="padding: 10px;">
+                투표 전체 초기화
+              </button>
+            </div>
+
+            <!-- QR Sync Display -->
+            <div class="qr-card">
+              <div class="qr-canvas-container" id="qrCanvasContainer">
+                <canvas id="syncQrCanvas"></canvas>
+              </div>
+              <div class="qr-status-msg" id="qrStatusMsg">
+                새 태블릿의 카메라로 이 QR 코드를 스캔하면 투표 후보명과 투표 상태가 그대로 즉시 복사됩니다.
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="saveSettingsBtn" style="padding: 10px 24px;">설정 완료 및 저장</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Session Import Confirmation Dialog -->
+  <div class="dialog-overlay" id="importDialogOverlay">
+    <div class="dialog-box">
+      <h3 class="dialog-title">동기화 데이터 발견</h3>
+      <p class="dialog-text" id="importDialogText">
+        QR 코드를 통해 다른 기기에서 내보낸 스티커 투표 내역을 발견했습니다. 불러올 데이터를 어떻게 처리할까요?
+      </p>
+      <div class="dialog-actions">
+        <button class="btn btn-primary" id="dialogOverwriteBtn">기존 투표 모두 덮어쓰기 (권장)</button>
+        <button class="btn btn-secondary" id="dialogMergeBtn">현재 투표와 병합하기</button>
+        <button class="btn btn-secondary" id="dialogCancelBtn" style="color:var(--text-muted)">가져오기 취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toast">
+    <span class="toast-icon">✨</span>
+    <span id="toastMessage">설정이 성공적으로 저장되었습니다!</span>
+  </div>
+
+  <!-- Admin Code Passcode Modal Overlay -->
+  <div class="modal-overlay" id="adminCodeOverlay">
+    <div class="dialog-box" style="max-width: 320px;">
+      <h3 class="dialog-title" style="color: #f59e0b;">관리자 인증</h3>
+      <p class="dialog-text" style="font-size:0.85rem; margin-bottom:15px;">설정 및 후보 수정을 위해 코드를 입력해 주세요.</p>
+      
+      <div style="margin-bottom: 15px;">
+        <input type="password" id="passcodeInput" class="input-field" maxlength="4" style="text-align:center; font-size:1.8rem; letter-spacing:10px; padding:10px;" placeholder="••••" readonly>
+      </div>
+      
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;" id="keypadContainer">
+        <button class="btn btn-secondary keypad-btn" data-val="1">1</button>
+        <button class="btn btn-secondary keypad-btn" data-val="2">2</button>
+        <button class="btn btn-secondary keypad-btn" data-val="3">3</button>
+        <button class="btn btn-secondary keypad-btn" data-val="4">4</button>
+        <button class="btn btn-secondary keypad-btn" data-val="5">5</button>
+        <button class="btn btn-secondary keypad-btn" data-val="6">6</button>
+        <button class="btn btn-secondary keypad-btn" data-val="7">7</button>
+        <button class="btn btn-secondary keypad-btn" data-val="8">8</button>
+        <button class="btn btn-secondary keypad-btn" data-val="9">9</button>
+        <button class="btn btn-secondary btn-danger" id="keypadClear" style="font-size: 0.9rem; padding: 10px;">C</button>
+        <button class="btn btn-secondary keypad-btn" data-val="0">0</button>
+        <button class="btn btn-secondary" id="keypadBackspace" style="padding: 10px; font-weight: bold;">⌫</button>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-secondary" id="cancelPasscodeBtn" style="flex:1;">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Voting Limit Overlay -->
+  <div class="modal-overlay" id="voteLimitOverlay">
+    <div class="dialog-box" style="max-width: 400px; border-color: #10b981; box-shadow: 0 15px 40px rgba(16, 185, 129, 0.15);">
+      <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
+      <h3 class="dialog-title" style="color: #10b981; margin-bottom: 10px;">투표 완료!</h3>
+      <p class="dialog-text" style="font-size: 0.95rem; margin-bottom: 20px;">
+        1인당 주어지는 <strong>최대 2회</strong>의 투표 기회를 모두 사용하셨습니다.<br>
+        소중한 의견 감사드립니다.
+      </p>
+      <button class="btn btn-primary" id="closeLimitOverlayBtn" style="background:#10b981; border-color:#059669; width: 100%;">완료</button>
+    </div>
+  </div>
+
+  <!-- External Offline scripts -->
+  <script src="qrious.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
