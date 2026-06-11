@@ -45,6 +45,17 @@ const voteLimitOverlay = doc.getElementById('voteLimitOverlay');
 const closeLimitOverlayBtn = doc.getElementById('closeLimitOverlayBtn');
 const resetLimitBtn = doc.getElementById('resetLimitBtn');
 
+// Staff Reset Panel elements (hidden inside vote limit overlay)
+const staffResetTrigger = doc.getElementById('staffResetTrigger');
+const staffResetPanel = doc.getElementById('staffResetPanel');
+const limitResetCodeInput = doc.getElementById('limitResetCodeInput');
+const limitResetKeypadBtns = doc.querySelectorAll('.limit-keypad-btn');
+const limitKeypadClear = doc.getElementById('limitKeypadClear');
+const limitKeypadBackspace = doc.getElementById('limitKeypadBackspace');
+const limitResetStatus = doc.getElementById('limitResetStatus');
+let limitResetAttempt = '';
+let staffTriggerCount = 0;
+
 // Cloud Sync elements
 const cloudSaveBtn = doc.getElementById('cloudSaveBtn');
 const cloudStatus = doc.getElementById('cloudStatus');
@@ -177,6 +188,72 @@ function bindEvents() {
   // Vote limit overlay close
   closeLimitOverlayBtn.addEventListener('click', () => {
     voteLimitOverlay.classList.remove('active');
+    // Reset staff panel state on close
+    staffTriggerCount = 0;
+    staffResetPanel.style.display = 'none';
+    limitResetAttempt = '';
+    limitResetCodeInput.value = '';
+    limitResetStatus.textContent = '';
+  });
+
+  // Staff Reset Trigger: 3번 탭하면 숨겨진 초기화 패널 표시
+  staffResetTrigger.addEventListener('click', () => {
+    staffTriggerCount++;
+    if (staffTriggerCount >= 3) {
+      staffResetPanel.style.display = 'block';
+      staffResetPanel.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  });
+
+  // Staff Reset Keypad buttons
+  limitResetKeypadBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const digit = btn.getAttribute('data-val');
+      if (limitResetAttempt.length < 4) {
+        limitResetAttempt += digit;
+        limitResetCodeInput.value = limitResetAttempt;
+
+        if (limitResetAttempt.length === 4) {
+          if (limitResetAttempt === '0503') {
+            // 올바른 코드 → 즉시 투표 횟수 초기화
+            myVotesCast = 0;
+            localStorage.setItem('my_votes_cast', '0');
+            limitResetStatus.textContent = '';
+            limitResetAttempt = '';
+            limitResetCodeInput.value = '';
+
+            // 패널 닫고 오버레이 닫기
+            staffTriggerCount = 0;
+            staffResetPanel.style.display = 'none';
+            voteLimitOverlay.classList.remove('active');
+            showToast('✅ 투표 기회가 초기화되었습니다. 다시 투표할 수 있습니다!');
+          } else {
+            // 틀린 코드 → 흔들림 효과 + 초기화
+            const box = voteLimitOverlay.querySelector('.dialog-box');
+            box.classList.add('shake');
+            playErrorSound();
+            limitResetStatus.textContent = '❌ 잘못된 코드입니다.';
+            setTimeout(() => {
+              box.classList.remove('shake');
+              limitResetAttempt = '';
+              limitResetCodeInput.value = '';
+              limitResetStatus.textContent = '';
+            }, 600);
+          }
+        }
+      }
+    });
+  });
+
+  limitKeypadClear.addEventListener('click', () => {
+    limitResetAttempt = '';
+    limitResetCodeInput.value = '';
+    limitResetStatus.textContent = '';
+  });
+
+  limitKeypadBackspace.addEventListener('click', () => {
+    limitResetAttempt = limitResetAttempt.slice(0, -1);
+    limitResetCodeInput.value = limitResetAttempt;
   });
 
   // Reset visitor vote limit in settings
